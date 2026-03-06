@@ -37,4 +37,3 @@
 ---
 **Developed by Sol Kim**  
 *Systems Designer | Field Service Engineer*  
-[LinkedIn](본인의_링크드인_주소) | [Portfolio](본인의_포트폴리오_주소)
