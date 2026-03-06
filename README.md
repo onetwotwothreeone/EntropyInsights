@@ -1,8 +1,3 @@
-Gemini said
-RevenueCat DSE(Developer Support Engineer) 지원자로서 솔 님의 기술적 전문성과 시스템 설계 철학이 가장 돋보일 수 있는 영문 README 초안을 작성해 드립니다.
-
-이 내용을 깃허브의 README.md 파일에 복사해서 붙여넣으시면, 면접관들에게 솔 님의 트러블슈팅 능력을 완벽하게 증명할 수 있습니다.
-
 🌌 EntropyInsights
 EntropyInsights는 우주의 엔트로피 법칙 속에서 여유와 풍요를 찾는 철학적 에세이를 전달하는 iOS SwiftUI 앱입니다. 단순히 텍스트를 보여주는 것을 넘어, RevenueCat SDK를 통합하여 시스템의 복잡성을 관리하고 사용자에게 투명한 구독 통제권을 제공하는 것을 목표로 설계되었습니다.
 
