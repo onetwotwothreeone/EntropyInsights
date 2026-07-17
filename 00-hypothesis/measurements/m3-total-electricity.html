@@ -1,0 +1,253 @@
+<title>측정 #3 — 국가별 총 전력은 상승하는가? (성숙 vs 신흥)</title>
+<style>
+  :root{
+    --bg:#E7ECF1; --panel:#F7F9FB; --panel-2:#EEF2F6;
+    --ink:#12161D; --muted:#57616F; --faint:#8A94A2;
+    --line:#D3DBE4; --grid:#DFE5EC;
+    --accent:#B8480A; --accent-soft:rgba(184,72,10,.10); --danger:#A2331E;
+    --s-world:#2a78d6; --s-de:#008300; --s-us:#e87ba4; --s-cn:#eda100;
+    --font-display:Georgia,'Iowan Old Style','Times New Roman',serif;
+    --font-body:system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans KR',sans-serif;
+    --font-mono:ui-monospace,'SF Mono','Cascadia Code',Menlo,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0B0F13; --panel:#12181E; --panel-2:#0F141A;
+      --ink:#E7ECF1; --muted:#8B96A4; --faint:#66707E;
+      --line:#232D36; --grid:#1B242C;
+      --accent:#F5923B; --accent-soft:rgba(245,146,59,.13); --danger:#E06A4E;
+      --s-world:#3987e5; --s-de:#008300; --s-us:#d55181; --s-cn:#c98500;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0B0F13; --panel:#12181E; --panel-2:#0F141A;
+    --ink:#E7ECF1; --muted:#8B96A4; --faint:#66707E;
+    --line:#232D36; --grid:#1B242C;
+    --accent:#F5923B; --accent-soft:rgba(245,146,59,.13); --danger:#E06A4E;
+    --s-world:#3987e5; --s-de:#008300; --s-us:#d55181; --s-cn:#c98500;
+  }
+  :root[data-theme="light"]{
+    --bg:#E7ECF1; --panel:#F7F9FB; --panel-2:#EEF2F6;
+    --ink:#12161D; --muted:#57616F; --faint:#8A94A2;
+    --line:#D3DBE4; --grid:#DFE5EC;
+    --accent:#B8480A; --accent-soft:rgba(184,72,10,.10); --danger:#A2331E;
+    --s-world:#2a78d6; --s-de:#008300; --s-us:#e87ba4; --s-cn:#eda100;
+  }
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:820px;margin:0 auto;padding:clamp(28px,5vw,64px) clamp(18px,4vw,36px) 72px;}
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,4.6vw,40px);line-height:1.15;letter-spacing:-.01em;text-wrap:balance;margin:0 0 18px;}
+  .lede{font-size:clamp(15px,1.9vw,17px);color:var(--muted);max-width:60ch;margin:0 0 8px;}
+  .lede b{color:var(--ink);}
+
+  .verdict{display:flex;flex-wrap:wrap;gap:10px;margin:26px 0 4px;}
+  .pill{font-family:var(--font-mono);font-size:12.5px;padding:7px 13px;border-radius:999px;border:1px solid var(--line);display:inline-flex;gap:8px;align-items:center;}
+  .pill .d{width:8px;height:8px;border-radius:50%;}
+  .pill.flat{color:var(--s-us);} .pill.up{color:var(--s-cn);}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:clamp(16px,3vw,26px);margin:26px 0;}
+  .chart-title{font-family:var(--font-display);font-size:18px;font-weight:600;margin:0 0 2px;}
+  .chart-sub{color:var(--faint);font-size:13px;margin:0 0 8px;}
+  .chart-scroll{overflow-x:auto;}
+  svg{display:block;width:100%;height:auto;min-width:560px;touch-action:pan-y;}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-size:13px;color:var(--muted);}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .legend .sw{width:22px;border-top-width:3px;border-top-style:solid;border-radius:3px;}
+
+  #tt{position:fixed;pointer-events:none;opacity:0;transition:opacity .12s;background:var(--ink);color:var(--bg);font-family:var(--font-mono);font-size:12px;line-height:1.5;padding:8px 10px;border-radius:8px;box-shadow:0 6px 22px rgba(0,0,0,.28);z-index:20;}
+  #tt .h{font-weight:600;}
+
+  h2{font-family:var(--font-display);font-size:clamp(19px,2.6vw,23px);font-weight:600;letter-spacing:-.01em;margin:44px 0 12px;text-wrap:balance;}
+  p{margin:0 0 15px;}
+  .callouts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0;}
+  @media (max-width:680px){.callouts{grid-template-columns:1fr 1fr;}}
+  @media (max-width:420px){.callouts{grid-template-columns:1fr;}}
+  .card{border:1px solid var(--line);border-radius:12px;padding:16px 15px 14px;background:var(--panel);}
+  .card .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:0 0 7px;}
+  .card .v{font-family:var(--font-mono);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;margin:0 0 6px;}
+  .card p{font-size:12.5px;color:var(--muted);margin:0;}
+  .card.us .v{color:var(--s-us);} .card.cn .v{color:var(--s-cn);} .card.wd .v{color:var(--s-world);} .card.de .v{color:var(--s-de);}
+
+  .lock{border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:12px;padding:18px;background:var(--panel);margin:22px 0;}
+  .lock h3{margin:0 0 8px;font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);}
+  .lock p{font-size:14px;color:var(--muted);margin:0;}
+  .lock b{color:var(--ink);}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px;font-variant-numeric:tabular-nums;}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);}
+  th{font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);font-weight:500;}
+  td.n{font-family:var(--font-mono);text-align:right;}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;}
+  .trend{font-family:var(--font-mono);font-size:12px;}
+  .trend.dn{color:var(--danger);} .trend.up{color:var(--s-de);} .trend.fl{color:var(--faint);}
+
+  .caveats li{margin-bottom:9px;color:var(--muted);font-size:14.5px;}
+  .caveats b{color:var(--ink);}
+  .sources{font-size:13px;color:var(--muted);}
+  .sources a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-soft);}
+  .sources a:hover{border-bottom-color:var(--accent);}
+  footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;font-family:var(--font-mono);}
+  .nav{display:flex;flex-wrap:wrap;gap:16px;margin-top:8px;}
+  .nav a{font-family:var(--font-mono);font-size:12.5px;color:var(--accent);text-decoration:none;}
+  .nav a:hover{text-decoration:underline;}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">EntropyInsights · 측정 #3 · 대리변수: 국가별 총 전력 · 질문: 총량은 오르는가?</p>
+  <h1>국가별 <em>총</em> 전력은 상승하는가?</h1>
+  <p class="lede">측정 #2는 <b>1인당</b> 전력을 봤다. "인구로 나눠서 생긴 착시 아니냐"는 반문에 답한다 — 인구 효과를 뺀 <b>순수 총량</b>으로 보면? 답: 세계와 중국은 폭증하지만, <b>성숙 경제는 총량조차 2007~09년경 멈췄다.</b></p>
+
+  <div class="verdict">
+    <span class="pill up"><span class="d" style="background:var(--s-cn)"></span>세계·중국 = 상승</span>
+    <span class="pill flat"><span class="d" style="background:var(--s-us)"></span>성숙 경제 = 정체~감소</span>
+  </div>
+
+  <div class="panel">
+    <p class="chart-title">총 전력 소비 (TWh/년)</p>
+    <p class="chart-sub">세계는 약 2배 · 중국은 2010년경 미국을 추월 · 미국은 2007 이후 평평</p>
+    <div class="chart-scroll">
+      <svg id="chart" viewBox="0 0 820 480" role="img"
+        aria-label="총 전력. 세계는 2000년 15277에서 2023년 29471 TWh로 상승. 중국은 1347에서 10066으로 급상승해 2010년경 미국을 추월. 미국은 3800에서 4178로 사실상 평평.">
+      </svg>
+    </div>
+    <div class="legend">
+      <span><span class="sw" style="border-top-color:var(--s-world)"></span>세계</span>
+      <span><span class="sw" style="border-top-color:var(--s-cn)"></span>중국</span>
+      <span><span class="sw" style="border-top-color:var(--s-us)"></span>미국</span>
+    </div>
+  </div>
+
+  <h2>네 개의 궤적</h2>
+  <div class="callouts">
+    <div class="card wd">
+      <p class="k">세계</p>
+      <p class="v">~2배</p>
+      <p>15,277 → 29,471 TWh (2000→2023).</p>
+    </div>
+    <div class="card cn">
+      <p class="k">중국</p>
+      <p class="v">~7.5배</p>
+      <p>1,347 → 10,066 TWh. 2010년경 미국 추월.</p>
+    </div>
+    <div class="card us">
+      <p class="k">미국</p>
+      <p class="v">≈ 평평</p>
+      <p>~3,800 → 4,178. 2007 이후 정체, 2024 반등.</p>
+    </div>
+    <div class="card de">
+      <p class="k">독일·일본</p>
+      <p class="v">감소</p>
+      <p>독 ~500→460, 일 988→967. 총량도 하락.</p>
+    </div>
+  </div>
+
+  <div class="lock">
+    <h3>측정 #1 ↔ #3 잠금</h3>
+    <p>미국 총 전력은 2007~09년부터 <b>평평했다.</b> 그런데 2024년 그 정체가 깨지기 시작했고, 주동력은 <b>데이터센터</b>다(측정 #1). 즉 <b>낡은 경제는 멈췄고, AI가 그걸 다시 켜고 있다.</b> 측정 #1(새 소비처 폭증)과 측정 #3(옛 소비처 정체)은 같은 현상의 양면이다 — 가속은 사라지지 않고 <b>새 소비처로 이동</b>한다.</p>
+  </div>
+
+  <h2>이 측정이 가설에 한 일</h2>
+  <p>측정 #2의 결론을 <b>총량 수준에서 재확인</b>한다. 성숙 경제의 1인당 감소는 인구 착시가 아니었다 — <b>총량조차</b> 멈췄다. 따라서 "부유한 개인·국가일수록 더 태운다"(P5의 순진한 형태)는 총량 기준으로도 <b>거짓</b>이다. 동시에 세계 <b>총</b> 전력은 계속 오르므로, 총체 명제(P0′)는 여전히 생존. 반증되는 것과 살아남는 것의 경계는 측정 #2와 정확히 같다.</p>
+
+  <h2>정직한 한계</h2>
+  <ul class="caveats">
+    <li><b>전력 ≠ 총 에너지.</b> 여전히 전력만이다. 성숙 경제의 난방·수송이 전기화되면 전력은 오르되 총 에너지는 다를 수 있다 → 측정 #5 후보.</li>
+    <li><b>중간 연도는 보간.</b> 양 끝값(2000·최근)은 검증된 수치, 사이는 앵커를 이은 것.</li>
+    <li><b>소비 vs 생산.</b> 중국의 폭증분 일부는 <b>선진국이 소비할 제품</b>을 만드느라 태운 것 → 측정 #4(소비 기반 회계)에서 정면으로 다룬다.</li>
+  </ul>
+
+  <h2>데이터 (총 전력, TWh)</h2>
+  <div class="chart-scroll">
+    <table>
+      <thead><tr><th>지역</th><th class="n">2000</th><th class="n">최근</th><th>추세</th><th>출처</th></tr></thead>
+      <tbody>
+        <tr><td><span class="dot" style="background:var(--s-world)"></span>세계</td><td class="n">15,277</td><td class="n">29,471 <span style="color:var(--faint)">’23</span></td><td><span class="trend up">↑ ~2×</span></td><td>Ember</td></tr>
+        <tr><td><span class="dot" style="background:var(--s-cn)"></span>중국</td><td class="n">1,347</td><td class="n">10,066 <span style="color:var(--faint)">’24</span></td><td><span class="trend up">↑ ~7.5×</span></td><td>Ember / REGlobal</td></tr>
+        <tr><td><span class="dot" style="background:var(--s-us)"></span>미국</td><td class="n">~3,800</td><td class="n">4,178 <span style="color:var(--faint)">’23</span></td><td><span class="trend fl">→ 평평</span></td><td>Ember / WRI</td></tr>
+        <tr><td>일본</td><td class="n">988</td><td class="n">967 <span style="color:var(--faint)">’22</span></td><td><span class="trend dn">↓ −2%</span></td><td>Enerdata</td></tr>
+        <tr><td><span class="dot" style="background:var(--s-de)"></span>독일</td><td class="n">~500</td><td class="n">~460 <span style="color:var(--faint)">’23</span></td><td><span class="trend dn">↓ 감소</span></td><td>Ember (EU)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>출처</h2>
+  <p class="sources">
+    · <a href="https://ember-energy.org/latest-insights/global-electricity-review-2025/major-countries-and-regions/">Ember — Global Electricity Review 2025</a> (세계 29,471 · 중국 10,066)<br>
+    · <a href="https://reglobal.org/china-and-us-electricity-review-ember/">REGlobal / Ember — China & US electricity review</a><br>
+    · <a href="https://www.wri.org/insights/us-data-centers-electricity-demand">WRI — US data centers electricity demand</a> (2007 이후 정체 · 2024 반등)
+  </p>
+
+  <div class="nav">
+    <a href="./m1-datacenter-power.html">← 측정 #1 · 데이터센터·AI 전력</a>
+    <a href="./m2-per-capita-electricity.html">측정 #2 · 1인당 전력 →</a>
+  </div>
+  <footer>측정 #3 · v1 · 2026-07-17 · 가설을 확증하지 않는다. "총량은 오르는가"에 데이터로 답하고 경계를 나눴을 뿐이다.</footer>
+</div>
+
+<div id="tt"></div>
+
+<script>
+(function(){
+  var SERIES=[
+    {key:'world',name:'세계',color:'--s-world',pts:[[2000,15277],[2010,21500],[2015,24300],[2018,26600],[2023,29471]]},
+    {key:'cn',name:'중국',color:'--s-cn',pts:[[2000,1347],[2010,4200],[2015,5700],[2020,7800],[2024,10066]]},
+    {key:'us',name:'미국',color:'--s-us',pts:[[2000,3800],[2007,4000],[2015,4090],[2023,4178]]}
+  ];
+  var svg=document.getElementById('chart'),NS='http://www.w3.org/2000/svg';
+  var W=820,H=480,ML=58,MR=70,MT=26,MB=46,IW=W-ML-MR,IH=H-MT-MB;
+  var x0=2000,x1=2025,ymax=31000;
+  function xpx(y){return ML+(y-x0)/(x1-x0)*IW;}
+  function ypx(v){return MT+(1-v/ymax)*IH;}
+  function el(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e;}
+  function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+
+  function draw(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    var cGrid=css('--grid'),cFaint=css('--faint'),cPanel=css('--panel'),cInk=css('--muted');
+    for(var t=0;t<=30000;t+=5000){
+      var y=ypx(t);
+      svg.appendChild(el('line',{x1:ML,y1:y,x2:W-MR,y2:y,stroke:cGrid,'stroke-width':1}));
+      var lb=el('text',{x:ML-8,y:y+4,'text-anchor':'end',fill:cFaint,'font-size':10.5,'font-family':'ui-monospace,monospace'});
+      lb.textContent=(t/1000)+'k'; svg.appendChild(lb);
+    }
+    [2000,2005,2010,2015,2020,2025].forEach(function(t){
+      var lb=el('text',{x:xpx(t),y:H-MB+20,'text-anchor':'middle',fill:cFaint,'font-size':10.5,'font-family':'ui-monospace,monospace'});
+      lb.textContent=t; svg.appendChild(lb);
+    });
+    // 중국-미국 교차 표식 (~2010)
+    var xc=xpx(2010.5);
+    svg.appendChild(el('line',{x1:xc,y1:ypx(4300),x2:xc,y2:ypx(300),stroke:cFaint,'stroke-width':1,'stroke-dasharray':'2 5'}));
+    var cl=el('text',{x:xc,y:ypx(300)+16,'text-anchor':'middle',fill:cFaint,'font-size':10,'font-family':'ui-monospace,monospace'});
+    cl.textContent='중국, 미국 추월'; svg.appendChild(cl);
+
+    SERIES.forEach(function(s){
+      var c=css(s.color);
+      var pts=s.pts.map(function(p){return xpx(p[0])+','+ypx(p[1]);}).join(' ');
+      svg.appendChild(el('polyline',{points:pts,fill:'none',stroke:c,'stroke-width':2.4,'stroke-linejoin':'round','stroke-linecap':'round'}));
+      s.pts.forEach(function(p){
+        svg.appendChild(el('circle',{cx:xpx(p[0]),cy:ypx(p[1]),r:4,fill:c,stroke:cPanel,'stroke-width':1.8}));
+        var hit=el('circle',{cx:xpx(p[0]),cy:ypx(p[1]),r:15,fill:'transparent',style:'cursor:pointer'});
+        hit.addEventListener('mouseenter',function(e){showTip(e,s,p);});
+        hit.addEventListener('mousemove',moveTip);
+        hit.addEventListener('mouseleave',hideTip);
+        svg.appendChild(hit);
+      });
+      var last=s.pts[s.pts.length-1],lx=xpx(last[0])+9,ly=ypx(last[1]);
+      if(s.key==='us')ly+=4;
+      svg.appendChild(el('circle',{cx:lx,cy:ly-4,r:3.5,fill:c}));
+      var nm=el('text',{x:lx+8,y:ly,fill:cInk,'font-size':11.5,'font-weight':600,'font-family':'var(--font-body)'});
+      nm.textContent=s.name; svg.appendChild(nm);
+    });
+  }
+  var tt=document.getElementById('tt');
+  function showTip(e,s,p){tt.innerHTML='<span class="h">'+s.name+' · '+p[0]+'</span><br>'+p[1].toLocaleString()+' TWh';tt.style.opacity=1;moveTip(e);}
+  function moveTip(e){var pad=14,w=tt.offsetWidth,h=tt.offsetHeight,x=e.clientX+pad,y=e.clientY+pad;if(x+w>innerWidth)x=e.clientX-w-pad;if(y+h>innerHeight)y=e.clientY-h-pad;tt.style.left=x+'px';tt.style.top=y+'px';}
+  function hideTip(){tt.style.opacity=0;}
+  var mq=matchMedia('(prefers-color-scheme: dark)');
+  if(mq.addEventListener)mq.addEventListener('change',draw);
+  new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  draw();
+})();
+</script>
