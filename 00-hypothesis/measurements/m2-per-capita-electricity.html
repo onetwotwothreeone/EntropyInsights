@@ -1,0 +1,275 @@
+<title>측정 #2 — 부유해질수록 에너지를 더 태우는가?</title>
+<style>
+  :root {
+    --bg:#E7ECF1; --panel:#F7F9FB; --panel-2:#EEF2F6;
+    --ink:#12161D; --muted:#57616F; --faint:#8A94A2;
+    --line:#D3DBE4; --grid:#DFE5EC;
+    --accent:#B8480A; --accent-soft:rgba(184,72,10,.10); --danger:#A2331E;
+    /* 검증된 범주형 팔레트 (슬롯 1–4) */
+    --s-world:#2a78d6; --s-de:#008300; --s-us:#e87ba4; --s-cn:#eda100;
+    --font-display:Georgia,'Iowan Old Style','Times New Roman',serif;
+    --font-body:system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans KR',sans-serif;
+    --font-mono:ui-monospace,'SF Mono','Cascadia Code',Menlo,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0B0F13; --panel:#12181E; --panel-2:#0F141A;
+      --ink:#E7ECF1; --muted:#8B96A4; --faint:#66707E;
+      --line:#232D36; --grid:#1B242C;
+      --accent:#F5923B; --accent-soft:rgba(245,146,59,.13); --danger:#E06A4E;
+      --s-world:#3987e5; --s-de:#008300; --s-us:#d55181; --s-cn:#c98500;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0B0F13; --panel:#12181E; --panel-2:#0F141A;
+    --ink:#E7ECF1; --muted:#8B96A4; --faint:#66707E;
+    --line:#232D36; --grid:#1B242C;
+    --accent:#F5923B; --accent-soft:rgba(245,146,59,.13); --danger:#E06A4E;
+    --s-world:#3987e5; --s-de:#008300; --s-us:#d55181; --s-cn:#c98500;
+  }
+  :root[data-theme="light"]{
+    --bg:#E7ECF1; --panel:#F7F9FB; --panel-2:#EEF2F6;
+    --ink:#12161D; --muted:#57616F; --faint:#8A94A2;
+    --line:#D3DBE4; --grid:#DFE5EC;
+    --accent:#B8480A; --accent-soft:rgba(184,72,10,.10); --danger:#A2331E;
+    --s-world:#2a78d6; --s-de:#008300; --s-us:#e87ba4; --s-cn:#eda100;
+  }
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);line-height:1.65;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:820px;margin:0 auto;padding:clamp(28px,5vw,64px) clamp(18px,4vw,36px) 72px;}
+
+  .eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 14px;}
+  h1{font-family:var(--font-display);font-weight:600;font-size:clamp(26px,4.6vw,40px);line-height:1.15;letter-spacing:-.01em;text-wrap:balance;margin:0 0 18px;}
+  .lede{font-size:clamp(15px,1.9vw,17px);color:var(--muted);max-width:60ch;margin:0 0 8px;}
+  .lede b{color:var(--ink);}
+
+  .verdict{display:flex;flex-wrap:wrap;gap:10px;margin:26px 0 4px;}
+  .pill{font-family:var(--font-mono);font-size:12.5px;padding:7px 13px;border-radius:999px;border:1px solid var(--line);display:inline-flex;gap:8px;align-items:center;}
+  .pill.bad{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,var(--line));}
+  .pill.ok{color:var(--s-de);border-color:color-mix(in srgb,var(--s-de) 35%,var(--line));}
+  .pill .d{width:8px;height:8px;border-radius:50%;}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:clamp(16px,3vw,26px);margin:26px 0;}
+  .chart-title{font-family:var(--font-display);font-size:18px;font-weight:600;margin:0 0 2px;}
+  .chart-sub{color:var(--faint);font-size:13px;margin:0 0 8px;}
+  .chart-scroll{overflow-x:auto;}
+  svg{display:block;width:100%;height:auto;min-width:560px;touch-action:pan-y;}
+  .legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-size:13px;color:var(--muted);}
+  .legend span{display:inline-flex;align-items:center;gap:7px;}
+  .legend .sw{width:22px;border-top-width:3px;border-top-style:solid;border-radius:3px;}
+
+  #tt{position:fixed;pointer-events:none;opacity:0;transition:opacity .12s;background:var(--ink);color:var(--bg);font-family:var(--font-mono);font-size:12px;line-height:1.5;padding:8px 10px;border-radius:8px;box-shadow:0 6px 22px rgba(0,0,0,.28);z-index:20;}
+  #tt .h{font-weight:600;}
+
+  h2{font-family:var(--font-display);font-size:clamp(19px,2.6vw,23px);font-weight:600;letter-spacing:-.01em;margin:44px 0 12px;text-wrap:balance;}
+  p{margin:0 0 15px;}
+  .callouts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:22px 0;}
+  @media (max-width:640px){.callouts{grid-template-columns:1fr;}}
+  .card{border:1px solid var(--line);border-radius:12px;padding:17px 17px 15px;background:var(--panel);}
+  .card .k{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:0 0 8px;}
+  .card .v{font-family:var(--font-mono);font-size:21px;font-weight:600;font-variant-numeric:tabular-nums;margin:0 0 6px;}
+  .card p{font-size:13px;color:var(--muted);margin:0;}
+  .card.us .v{color:var(--s-us);} .card.cn .v{color:var(--s-cn);} .card.int .v{color:var(--s-world);}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0;}
+  @media (max-width:560px){.twocol{grid-template-columns:1fr;}}
+  .vcard{border:1px solid var(--line);border-radius:12px;padding:18px;background:var(--panel);}
+  .vcard.refute{border-left:3px solid var(--danger);}
+  .vcard.survive{border-left:3px solid var(--s-de);}
+  .vcard h3{margin:0 0 8px;font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;}
+  .vcard.refute h3{color:var(--danger);} .vcard.survive h3{color:var(--s-de);}
+  .vcard p{font-size:14px;color:var(--muted);margin:0;}
+  .vcard p b{color:var(--ink);}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px;font-variant-numeric:tabular-nums;}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);}
+  th{font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);font-weight:500;}
+  td.n{font-family:var(--font-mono);text-align:right;}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:baseline;}
+  .trend{font-family:var(--font-mono);font-size:12px;}
+  .trend.dn{color:var(--danger);} .trend.up{color:var(--s-de);}
+
+  .caveats li{margin-bottom:10px;color:var(--muted);font-size:14.5px;}
+  .caveats b{color:var(--ink);}
+  .sources{font-size:13px;color:var(--muted);}
+  .sources a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent-soft);}
+  .sources a:hover{border-bottom-color:var(--accent);}
+  footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--faint);font-size:12.5px;font-family:var(--font-mono);}
+  hr.sep{border:0;border-top:1px solid var(--line);margin:40px 0;}
+  .link-prev{display:inline-block;margin-top:4px;font-family:var(--font-mono);font-size:12.5px;color:var(--accent);text-decoration:none;}
+  .link-prev:hover{text-decoration:underline;}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">EntropyInsights · 측정 #2 · 대리변수: 1인당 전력 · 시험: 탈동조화(R2)</p>
+  <h1>부유해질수록 에너지를 더 태우는가?</h1>
+  <p class="lede">가설에 <b>일부러 가장 불리한 시험</b>을 건다. 가설의 P5는 "부유할수록 더 빠르고 많이 에너지를 태운다"고 말한다. 그렇다면 가장 부유한 나라들의 <b>1인당 전력</b>은 계속 올라야 한다. 실제로는? — <b>2007~2011년에 정점을 찍고 내려온다.</b></p>
+
+  <div class="verdict">
+    <span class="pill bad"><span class="d" style="background:var(--danger)"></span>P5(순진한 형태) 반증</span>
+    <span class="pill ok"><span class="d" style="background:var(--s-de)"></span>P0′(총량 가속) 생존</span>
+  </div>
+
+  <div class="panel">
+    <p class="chart-title">1인당 전력 소비 (kWh/인·년)</p>
+    <p class="chart-sub">선진국은 정점 후 감소 · 중국은 폭증하며 독일 추월 · 세계 평균은 완만한 상승</p>
+    <div class="chart-scroll">
+      <svg id="chart" viewBox="0 0 820 480" role="img"
+        aria-label="2000년부터 2024년까지 1인당 전력. 미국은 13400에서 11500으로 감소, 독일은 7282에서 6100으로 감소, 세계 평균은 2300에서 3788로 상승, 중국은 1000에서 6500으로 급상승하여 독일을 추월.">
+      </svg>
+    </div>
+    <div class="legend">
+      <span><span class="sw" style="border-top-color:var(--s-us)"></span>미국</span>
+      <span><span class="sw" style="border-top-color:var(--s-de)"></span>독일</span>
+      <span><span class="sw" style="border-top-color:var(--s-cn)"></span>중국</span>
+      <span><span class="sw" style="border-top-color:var(--s-world)"></span>세계 평균</span>
+    </div>
+  </div>
+
+  <h2>세 가지 사실</h2>
+  <div class="callouts">
+    <div class="card us">
+      <p class="k">선진국 · 정점 후 감소</p>
+      <p class="v">−8~18%</p>
+      <p>미국 −8%(2007→2021), 독일 −18%(2011→2023), 일본 −14%(2010→2025). GDP는 늘었는데 1인당 전력은 줄었다.</p>
+    </div>
+    <div class="card cn">
+      <p class="k">중국 · 따라잡기 폭증</p>
+      <p class="v">~6.5배</p>
+      <p>1인당 ~1,000 → ~6,500 kWh(2000→2024). 영국·독일을 추월. 가속은 사라진 게 아니라 여기로 왔다.</p>
+    </div>
+    <div class="card int">
+      <p class="k">에너지 강도 · GDP당</p>
+      <p class="v">−1.7%<span style="font-size:13px;color:var(--muted)">/년</span></p>
+      <p>세계는 GDP 1달러당 에너지를 매년 덜 쓴다(상대적 탈동조화). 단 이건 "상대적"일 뿐.</p>
+    </div>
+  </div>
+
+  <h2>이 시험이 가설에 한 일</h2>
+  <div class="twocol">
+    <div class="vcard refute">
+      <h3>반증된 것 — P5의 순진한 형태</h3>
+      <p>"부유한 <b>개인</b>일수록 1인당 더 태운다"는 <b>거짓</b>이다. 가장 부유한 나라들은 1인당 전력이 오히려 <b>줄었다</b>. 효율·산업구조 전환·인구정체가 수요를 이겼다. 가설의 처세 명제(P5)는 개인·국가 단위에서 성립하지 않는다.</p>
+    </div>
+    <div class="vcard survive">
+      <h3>살아남은 것 — P0′의 총량 명제</h3>
+      <p>세계 <b>총</b> 전력·평균 1인당은 여전히 상승한다. 선진국 감소를 중국·개도국의 따라잡기가 <b>덮고도 남는다</b>. "인간 총체는 에너지 처리량을 키운다"는 서술은 아직 반증되지 않았다.</p>
+    </div>
+  </div>
+  <p>그래서 정직한 수정은 이렇다: 가속의 주어를 <b>"부유한 개인"에서 "인류 총체"로</b> 옮긴다. 가속은 멈춘 게 아니라 <b>이동</b>한다 — 성숙한 경제에서 <b>따라잡는 경제로</b>, 그리고 낡은 소비처에서 <b>새 소비처(측정 #1의 AI·데이터센터)로</b>. 측정 #1과 #2를 겹치면 하나의 그림이 된다: <b>오래된 곳에선 탈동조화, 새로운 곳에선 폭발.</b></p>
+
+  <h2>이 결과를 뒤집을 수 있는 반론 (정직한 한계)</h2>
+  <ul class="caveats">
+    <li><b>소비 기반 회계(오프쇼어링).</b> 선진국의 1인당 감소는 상당 부분 <b>에너지를 수입</b>한 결과다. 중국에서 만든 제품에 담긴 에너지는 중국 통계에 잡히고, 선진국 통계에선 빠진다. 영토 기준 감소는 진짜 footprint 감소를 <b>과장</b>한다 — 이건 오히려 총량 명제(P0′)를 구해준다.</li>
+    <li><b>상대적 ≠ 절대적 탈동조화.</b> GDP당 에너지가 줄어도(−1.7%/년) 세계 <b>총</b> 에너지는 계속 는다. R2가 요구한 건 <b>지속적 절대 감소</b>인데, 그건 세계 단위에서 일어나지 않았다.</li>
+    <li><b>전력 ≠ 총 에너지.</b> 이 측정은 전력만 봤다. 난방·수송·산업 열까지 포함한 1차 에너지는 그림이 다를 수 있다. 다음 측정 후보.</li>
+    <li><b>1인당 ≠ W/kg.</b> 가설의 정식 지표는 여전히 단위 질량당 흐름률이다. 1인당은 인구로 나눈 것일 뿐, 체이슨 지표가 아니다.</li>
+  </ul>
+
+  <h2>데이터</h2>
+  <div class="chart-scroll">
+    <table>
+      <thead><tr><th>지역</th><th class="n">정점 (kWh)</th><th class="n">최근 (kWh)</th><th>추세</th><th>출처</th></tr></thead>
+      <tbody>
+        <tr><td><span class="dot" style="background:var(--s-us)"></span>미국</td><td class="n">~13,400 <span style="color:var(--faint)">’07</span></td><td class="n">11,500 <span style="color:var(--faint)">’21</span></td><td><span class="trend dn">↓ −8%</span></td><td>World Bank · OWID</td></tr>
+        <tr><td><span class="dot" style="background:var(--s-de)"></span>독일</td><td class="n">7,282 <span style="color:var(--faint)">’11</span></td><td class="n">6,109 <span style="color:var(--faint)">’24</span></td><td><span class="trend dn">↓ −16%</span></td><td>CEIC · Ember</td></tr>
+        <tr><td>일본</td><td class="n">9,134 <span style="color:var(--faint)">’10</span></td><td class="n">7,886 <span style="color:var(--faint)">’25</span></td><td><span class="trend dn">↓ −14%</span></td><td>Enerdata · OWID</td></tr>
+        <tr><td><span class="dot" style="background:var(--s-cn)"></span>중국</td><td class="n">— </td><td class="n">~6,500 <span style="color:var(--faint)">’24</span></td><td><span class="trend up">↑ ~6.5×</span></td><td>Ember · OWID</td></tr>
+        <tr><td><span class="dot" style="background:var(--s-world)"></span>세계 평균</td><td class="n">— </td><td class="n">3,788 <span style="color:var(--faint)">최근</span></td><td><span class="trend up">↑ 상승</span></td><td>Ember</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:12.5px;color:var(--faint);margin-top:10px;">값은 대표 앵커 포인트(약값, ~). 출처·방법론이 섞여 있어 동질 시계열이 아니다. 곡선은 앵커 사이를 이은 것.</p>
+
+  <h2>출처</h2>
+  <p class="sources">
+    · <a href="https://ourworldindata.org/energy/country/china">Our World in Data — Energy country profiles</a> (Ember/Energy Institute 기반)<br>
+    · <a href="https://data.worldbank.org/indicator/EG.USE.ELEC.KH.PC?locations=US">World Bank — Electric power consumption (kWh per capita)</a><br>
+    · <a href="https://www.eia.gov/todayinenergy/detail.php?id=27032">EIA — Global energy intensity continues to decline</a> · <a href="https://yearbook.enerdata.net/total-energy/world-energy-intensity-gdp-data.html">Enerdata — World energy intensity</a>
+  </p>
+
+  <a class="link-prev" href="./m1-datacenter-power.html">← 측정 #1 — 데이터센터·AI 전력은 정말 '가속'하는가?</a>
+  <footer>측정 #2 · v1 · 2026-07-17 · 가설을 확증하지 않는다. 가장 불리한 시험을 걸고, 무엇이 반증되고 무엇이 살아남았는지 나눴을 뿐이다.</footer>
+</div>
+
+<div id="tt"></div>
+
+<script>
+(function(){
+  var SERIES = [
+    {key:'us', name:'미국', color:'--s-us', pts:[[2000,12800],[2007,13400],[2014,12900],[2021,11500]]},
+    {key:'de', name:'독일', color:'--s-de', pts:[[2000,6700],[2011,7282],[2021,6100],[2024,6109]]},
+    {key:'cn', name:'중국', color:'--s-cn', pts:[[2000,1000],[2010,3000],[2018,4900],[2024,6500]]},
+    {key:'world', name:'세계', color:'--s-world', pts:[[2000,2300],[2010,2900],[2018,3300],[2023,3788]]}
+  ];
+  var svg=document.getElementById('chart'), NS='http://www.w3.org/2000/svg';
+  var W=820,H=480,ML=54,MR=74,MT=26,MB=46, IW=W-ML-MR, IH=H-MT-MB;
+  var x0=2000,x1=2025, ymax=14000;
+
+  function xpx(y){return ML+(y-x0)/(x1-x0)*IW;}
+  function ypx(v){return MT+(1-v/ymax)*IH;}
+  function el(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e;}
+  function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+
+  function draw(){
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    var cGrid=css('--grid'),cFaint=css('--faint'),cPanel=css('--panel'),cInk=css('--muted');
+
+    // 선진국 정점대 밴드 2007–2011
+    svg.appendChild(el('rect',{x:xpx(2007),y:MT,width:xpx(2011)-xpx(2007),height:IH,fill:cFaint,opacity:.06}));
+    var bl=el('text',{x:(xpx(2007)+xpx(2011))/2,y:MT+13,'text-anchor':'middle',fill:cFaint,'font-size':10.5,'font-family':'ui-monospace,monospace'});
+    bl.textContent='선진국 정점대'; svg.appendChild(bl);
+
+    for(var t=0;t<=14000;t+=2000){
+      var y=ypx(t);
+      svg.appendChild(el('line',{x1:ML,y1:y,x2:W-MR,y2:y,stroke:cGrid,'stroke-width':1}));
+      var lb=el('text',{x:ML-8,y:y+4,'text-anchor':'end',fill:cFaint,'font-size':10.5,'font-family':'ui-monospace,monospace'});
+      lb.textContent=(t/1000)+'k'; svg.appendChild(lb);
+    }
+    [2000,2005,2010,2015,2020,2025].forEach(function(t){
+      var lb=el('text',{x:xpx(t),y:H-MB+20,'text-anchor':'middle',fill:cFaint,'font-size':10.5,'font-family':'ui-monospace,monospace'});
+      lb.textContent=t; svg.appendChild(lb);
+    });
+
+    SERIES.forEach(function(s){
+      var c=css(s.color);
+      var pts=s.pts.map(function(p){return xpx(p[0])+','+ypx(p[1]);}).join(' ');
+      svg.appendChild(el('polyline',{points:pts,fill:'none',stroke:c,'stroke-width':2.4,'stroke-linejoin':'round','stroke-linecap':'round'}));
+      s.pts.forEach(function(p){
+        svg.appendChild(el('circle',{cx:xpx(p[0]),cy:ypx(p[1]),r:4,fill:c,stroke:cPanel,'stroke-width':1.8}));
+        var hit=el('circle',{cx:xpx(p[0]),cy:ypx(p[1]),r:15,fill:'transparent',style:'cursor:pointer'});
+        hit.addEventListener('mouseenter',function(e){showTip(e,s,p);});
+        hit.addEventListener('mousemove',moveTip);
+        hit.addEventListener('mouseleave',hideTip);
+        svg.appendChild(hit);
+      });
+      // 끝 라벨: 색 점(마크) + 잉크 텍스트
+      var last=s.pts[s.pts.length-1];
+      var lx=xpx(last[0])+9, ly=ypx(last[1]);
+      // 겹침 방지 미세 조정
+      if(s.key==='de') ly+=4; if(s.key==='cn') ly-=2;
+      svg.appendChild(el('circle',{cx:lx,cy:ly-4,r:3.5,fill:c}));
+      var nm=el('text',{x:lx+8,y:ly,fill:cInk,'font-size':11.5,'font-weight':600,'font-family':'var(--font-body)'});
+      nm.textContent=s.name; svg.appendChild(nm);
+    });
+  }
+
+  var tt=document.getElementById('tt');
+  function showTip(e,s,p){
+    tt.innerHTML='<span class="h">'+s.name+' · '+p[0]+'</span><br>'+p[1].toLocaleString()+' kWh/인';
+    tt.style.opacity=1; moveTip(e);
+  }
+  function moveTip(e){
+    var pad=14,w=tt.offsetWidth,h=tt.offsetHeight,x=e.clientX+pad,y=e.clientY+pad;
+    if(x+w>innerWidth)x=e.clientX-w-pad; if(y+h>innerHeight)y=e.clientY-h-pad;
+    tt.style.left=x+'px'; tt.style.top=y+'px';
+  }
+  function hideTip(){tt.style.opacity=0;}
+
+  var mq=matchMedia('(prefers-color-scheme: dark)');
+  if(mq.addEventListener)mq.addEventListener('change',draw);
+  new MutationObserver(draw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  draw();
+})();
+</script>
