@@ -1,0 +1,387 @@
+<title>측정 #1 — 데이터센터·AI 전력은 정말 '가속'하는가?</title>
+<style>
+  :root {
+    --bg: #E7ECF1;
+    --panel: #F7F9FB;
+    --panel-2: #EEF2F6;
+    --ink: #12161D;
+    --muted: #57616F;
+    --faint: #8A94A2;
+    --line: #D3DBE4;
+    --grid: #DFE5EC;
+    --accent: #B8480A;      /* ember — 측정된 에너지 */
+    --accent-soft: rgba(184,72,10,.10);
+    --projected: #6C7787;   /* 예측(불확실) — 중립 */
+    --danger: #A2331E;      /* 반증선 임계 */
+    --danger-soft: rgba(162,51,30,.09);
+    --font-display: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+    --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0B0F13; --panel: #12181E; --panel-2: #0F141A;
+      --ink: #E7ECF1; --muted: #8B96A4; --faint: #66707E;
+      --line: #232D36; --grid: #1B242C;
+      --accent: #F5923B; --accent-soft: rgba(245,146,59,.13);
+      --projected: #8A96A6; --danger: #E06A4E; --danger-soft: rgba(224,106,78,.11);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B0F13; --panel: #12181E; --panel-2: #0F141A;
+    --ink: #E7ECF1; --muted: #8B96A4; --faint: #66707E;
+    --line: #232D36; --grid: #1B242C;
+    --accent: #F5923B; --accent-soft: rgba(245,146,59,.13);
+    --projected: #8A96A6; --danger: #E06A4E; --danger-soft: rgba(224,106,78,.11);
+  }
+  :root[data-theme="light"] {
+    --bg: #E7ECF1; --panel: #F7F9FB; --panel-2: #EEF2F6;
+    --ink: #12161D; --muted: #57616F; --faint: #8A94A2;
+    --line: #D3DBE4; --grid: #DFE5EC;
+    --accent: #B8480A; --accent-soft: rgba(184,72,10,.10);
+    --projected: #6C7787; --danger: #A2331E; --danger-soft: rgba(162,51,30,.09);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--font-body); line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: clamp(28px, 5vw, 64px) clamp(18px, 4vw, 36px) 72px; }
+
+  .eyebrow {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 14px;
+  }
+  h1 {
+    font-family: var(--font-display); font-weight: 600;
+    font-size: clamp(26px, 4.6vw, 40px); line-height: 1.15; letter-spacing: -.01em;
+    text-wrap: balance; margin: 0 0 18px;
+  }
+  .lede { font-size: clamp(15px, 1.9vw, 17px); color: var(--muted); max-width: 60ch; margin: 0 0 8px; }
+
+  .headline-num {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 18px;
+    margin: 30px 0 6px; font-family: var(--font-mono);
+  }
+  .headline-num .a { font-size: clamp(30px, 6vw, 46px); font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .headline-num .arrow { color: var(--accent); font-size: clamp(22px,4vw,30px); }
+  .headline-num .b { font-size: clamp(30px, 6vw, 46px); font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .headline-num .u { font-size: 15px; color: var(--muted); font-family: var(--font-body); }
+  .headline-cap { color: var(--faint); font-size: 13.5px; margin: 0 0 4px; }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: clamp(16px, 3vw, 26px); margin: 26px 0;
+  }
+  .chart-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+  .chart-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; margin: 0; }
+  .toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+  .toggle button {
+    font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em;
+    background: transparent; color: var(--muted); border: 0; padding: 6px 13px; cursor: pointer;
+  }
+  .toggle button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+  @media (prefers-color-scheme: dark){ .toggle button[aria-pressed="true"]{ color:#12181E; } }
+  :root[data-theme="dark"] .toggle button[aria-pressed="true"]{ color:#12181E; }
+  :root[data-theme="light"] .toggle button[aria-pressed="true"]{ color:#fff; }
+
+  .chart-scroll { overflow-x: auto; }
+  svg { display: block; width: 100%; height: auto; min-width: 520px; touch-action: pan-y; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; font-size: 13px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .swatch { width: 22px; height: 0; border-top-width: 3px; border-top-style: solid; border-radius: 3px; }
+
+  #tt {
+    position: fixed; pointer-events: none; opacity: 0; transition: opacity .12s;
+    background: var(--ink); color: var(--bg); font-family: var(--font-mono);
+    font-size: 12px; line-height: 1.5; padding: 8px 10px; border-radius: 8px;
+    box-shadow: 0 6px 22px rgba(0,0,0,.28); z-index: 20; max-width: 220px;
+  }
+  #tt b { color: var(--accent); }
+
+  h2 {
+    font-family: var(--font-display); font-size: clamp(19px,2.6vw,23px); font-weight: 600;
+    letter-spacing: -.01em; margin: 44px 0 12px; text-wrap: balance;
+  }
+  p { margin: 0 0 15px; }
+  .callouts { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 22px 0; }
+  @media (max-width: 560px){ .callouts { grid-template-columns: 1fr; } }
+  .card { border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px 16px; background: var(--panel); }
+  .card.pred { border-left: 3px solid var(--accent); }
+  .card.falsify { border-left: 3px solid var(--danger); }
+  .card .k { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin: 0 0 8px; }
+  .card .v { font-family: var(--font-mono); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; margin: 0 0 6px; }
+  .card.pred .v { color: var(--accent); }
+  .card.falsify .v { color: var(--danger); }
+  .card p { font-size: 13.5px; color: var(--muted); margin: 0; }
+
+  ol.steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+  ol.steps li { position: relative; padding: 0 0 14px 40px; counter-increment: s; }
+  ol.steps li::before {
+    content: counter(s); position: absolute; left: 0; top: 0;
+    width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line);
+    display: grid; place-items: center; font-family: var(--font-mono); font-size: 12.5px; color: var(--accent);
+  }
+  ol.steps li.done::before { background: var(--accent); color: #fff; border-color: var(--accent); }
+  @media (prefers-color-scheme: dark){ ol.steps li.done::before{ color:#12181E; } }
+  :root[data-theme="dark"] ol.steps li.done::before{ color:#12181E; }
+  ol.steps b { font-weight: 600; }
+  ol.steps .note { color: var(--muted); font-size: 14px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+  th { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); font-weight: 500; }
+  td.n { font-family: var(--font-mono); text-align: right; }
+  .tag { font-family: var(--font-mono); font-size: 11px; padding: 2px 7px; border-radius: 5px; }
+  .tag.m { background: var(--accent-soft); color: var(--accent); }
+  .tag.p { background: var(--panel-2); color: var(--projected); border: 1px solid var(--line); }
+
+  .caveats li { margin-bottom: 9px; color: var(--muted); font-size: 14.5px; }
+  .caveats b { color: var(--ink); font-weight: 600; }
+  .sources { font-size: 13px; color: var(--muted); }
+  .sources a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+  .sources a:hover { border-bottom-color: var(--accent); }
+  footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--faint); font-size: 12.5px; font-family: var(--font-mono); }
+  hr.sep { border: 0; border-top: 1px solid var(--line); margin: 40px 0; }
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">EntropyInsights · 측정 #1 · 대리변수: 데이터센터·AI 전력</p>
+  <h1>데이터센터·AI 전력은 정말 "가속"하는가?</h1>
+  <p class="lede">가설을 은유에서 물리로 옮기는 첫 단계는 <b>측정</b>이다. "인간(과 기술 문명)은 다른 어떤 자연 현상보다 에너지를 빠르게 태운다"는 명제를, 잴 수 있는 숫자 하나 — 전 세계 데이터센터 연간 전력소비(TWh) — 로 시험한다.</p>
+
+  <div class="headline-num" aria-hidden="true">
+    <span class="a">194</span>
+    <span class="arrow">→</span>
+    <span class="b">945</span>
+    <span class="u">TWh · 2010 → 2030(예측), 약 4.9배</span>
+  </div>
+  <p class="headline-cap">단, 이 상승은 균일하지 않다. 2010–2018년은 거의 평평했다. 아래가 그 이야기다.</p>
+
+  <div class="panel">
+    <div class="chart-head">
+      <h3 class="chart-title">전 세계 데이터센터 전력소비 (TWh, 암호화폐 제외)</h3>
+      <div class="toggle" role="group" aria-label="세로축 눈금">
+        <button id="btnLin" aria-pressed="true">선형</button>
+        <button id="btnLog" aria-pressed="false">로그</button>
+      </div>
+    </div>
+    <div class="chart-scroll">
+      <svg id="chart" viewBox="0 0 820 480" role="img"
+           aria-label="2010년 194TWh에서 2018년 205TWh로 거의 평평하다가, 2024년 415TWh, 2030년 945TWh 예측으로 급상승하는 선 그래프">
+      </svg>
+    </div>
+    <div class="legend">
+      <span><span class="swatch" style="border-top-color:var(--accent)"></span>측정 (2010–2024)</span>
+      <span><span class="swatch" style="border-top-color:var(--projected);border-top-style:dashed"></span>IEA 예측 (2024–2030)</span>
+      <span><span class="swatch" style="border-top-color:var(--danger);border-top-style:dotted"></span>반증선</span>
+    </div>
+  </div>
+
+  <h2>읽는 법: 하나의 선, 두 개의 국면</h2>
+  <p>같은 데이터가 두 개의 전혀 다른 이야기를 담고 있다. 어느 구간을 보느냐에 따라 가설은 확증되기도, 반증되기도 한다 — 그래서 구간을 나눠 연평균 증가율(CAGR)을 본다.</p>
+  <div class="callouts">
+    <div class="card">
+      <p class="k">2010 → 2018 · 평평</p>
+      <p class="v">+0.7%<span style="font-size:14px;color:var(--muted)">/년</span></p>
+      <p>트래픽은 10배 넘게 늘었지만 전력은 거의 그대로. 가상화·하이퍼스케일·냉각 효율이 수요 폭증을 <b>상쇄</b>했다. 가속 명제에 불리한 구간.</p>
+    </div>
+    <div class="card">
+      <p class="k">2018 → 2030 · 급상승</p>
+      <p class="v">+13~15%<span style="font-size:14px;color:var(--muted)">/년</span></p>
+      <p>효율의 여유분이 소진되고 AI가 밀어붙이며 국면이 전환. 6년마다 약 2배. 여기서는 가속 명제가 성립.</p>
+    </div>
+  </div>
+  <p>결론적 사실 하나: <b>"처음부터 쭉 가속"은 데이터로 거짓이다.</b> 실제는 <b>효율이 이기던 평평한 국면 → 2020년 전후 AI가 이기는 가속 국면</b>으로의 <b>전환</b>이다. 이 사실이 아래 반증선을 진짜로 만든다 — 정체는 이미 한 번 실제로 일어났으니까.</p>
+
+  <div class="callouts">
+    <div class="card pred">
+      <p class="k">공식화 5단계 — 새 예측</p>
+      <p class="v">2027 ≈ 631 TWh</p>
+      <p>가속 국면(연 15%)이 유지된다면: 415 × 1.15³. 아직 관측되지 않은 값 — 이걸 맞혀야 "공식"이다.</p>
+    </div>
+    <div class="card falsify">
+      <p class="k">공식화 6단계 — 반증선</p>
+      <p class="v">2027 ≤ ~415 TWh</p>
+      <p>2027 소비가 2026 수준으로 정체하면 "단조 가속" 읽기는 이 대리변수에서 <b>반증</b>. 2010–2018이 그 전례.</p>
+    </div>
+  </div>
+
+  <h2>이 측정이 밟은 공식화 단계</h2>
+  <ol class="steps">
+    <li class="done"><b>측정 가능한 양으로 정의</b> — "욕망/가속" → 데이터센터 연간 전력(TWh). <span class="note">잴 수 없는 건 공식에 못 들어간다.</span></li>
+    <li class="done"><b>데이터를 모은다</b> — Masanet(2010·2018), IEA(2022·2024·2030). <span class="note">아래 표·출처 참조.</span></li>
+    <li class="done"><b>규칙성을 찾는다</b> — 단일 지수함수가 아니라 <b>두 국면(평평 → 급상승)</b>. <span class="note">로그 눈금으로 켜서 직선 여부를 눈으로 확인.</span></li>
+    <li class="done"><b>수식으로 압축</b> — 가속 국면 ≈ E(t)=415·1.15^(t−2024) TWh. <span class="note">아직 '이유 없는' 경험식.</span></li>
+    <li><b>새 예측을 뽑는다</b> — 2027 ≈ 631 TWh. <span class="note">미래값. 검증 대기.</span></li>
+    <li><b>틀릴 조건을 걸고 검증</b> — 2027 ≤ 2026 수준이면 기각. <span class="note">2027 실측치가 나오면 판정.</span></li>
+  </ol>
+
+  <hr class="sep">
+
+  <h2>정직한 한계 (다음 측정으로 넘길 것)</h2>
+  <ul class="caveats">
+    <li><b>방법론 단절.</b> 2010–2018(Masanet)과 2022–2030(IEA)은 추정 모델이 다르다. 두 시리즈를 한 선으로 이은 건 편의이지, 완전한 동질 시계열이 아니다.</li>
+    <li><b>총 TWh ≠ 진짜 지표.</b> 가설의 정식 형태는 체이슨의 <b>단위 질량당 에너지 흐름률(W/kg)</b>이다. 총 전력은 거친 대리변수 — 하드웨어 질량·연산량으로 정규화해야 "밀도"가 된다.</li>
+    <li><b>2022는 범위(240–340).</b> 중앙값 290을 찍었을 뿐, 불확실성이 크다. 암호화폐(~110 TWh)는 전부 제외했다.</li>
+    <li><b>예측 ≠ 측정.</b> 945(2030)와 631(2027)은 IEA 모델·외삽이다. 실측이 아니라 <b>검증 대상</b>이다.</li>
+  </ul>
+
+  <h2>데이터</h2>
+  <div class="chart-scroll">
+    <table>
+      <thead><tr><th>연도</th><th class="n">전력 (TWh)</th><th>종류</th><th>출처</th></tr></thead>
+      <tbody>
+        <tr><td>2010</td><td class="n">~194</td><td><span class="tag m">측정</span></td><td>Masanet 2020</td></tr>
+        <tr><td>2018</td><td class="n">~205</td><td><span class="tag m">측정</span></td><td>Masanet 2020 (Science) · 2010 대비 +6%</td></tr>
+        <tr><td>2022</td><td class="n">240–340</td><td><span class="tag m">측정</span></td><td>IEA · 중앙 ~290, 암호화폐 별도</td></tr>
+        <tr><td>2024</td><td class="n">415</td><td><span class="tag m">측정</span></td><td>IEA Energy &amp; AI 2025 · 전력의 ~1.5%</td></tr>
+        <tr><td>2027</td><td class="n">~631</td><td><span class="tag p">예측(본 측정)</span></td><td>415 × 1.15³ (가속 국면 외삽)</td></tr>
+        <tr><td>2030</td><td class="n">945</td><td><span class="tag p">예측</span></td><td>IEA Base Case</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>출처</h2>
+  <p class="sources">
+    · IEA, <a href="https://www.iea.org/reports/energy-and-ai/executive-summary">Energy and AI (2025)</a> — 2024: 415 TWh, 2030: 945 TWh<br>
+    · IEA, <a href="https://www.iea.org/energy-system/buildings/data-centres-and-data-transmission-networks">Data centres &amp; networks</a> — 2022: 240–340 TWh (암호화폐 제외)<br>
+    · Masanet et al., <a href="https://www.science.org/doi/10.1126/science.aba3758">Recalibrating global data center energy-use estimates</a>, <i>Science</i> (2020) — 2010–2018 +6%
+  </p>
+
+  <footer>측정 #1 · v1 · 2026-07-17 · 이 페이지는 가설을 확증하지 않는다. 하나의 대리변수를 재고, 틀릴 조건을 명시했을 뿐이다.</footer>
+</div>
+
+<div id="tt"></div>
+
+<script>
+(function(){
+  var DATA = [
+    {year:2010, twh:194, kind:'m', src:'Masanet 2020'},
+    {year:2018, twh:205, kind:'m', src:'Masanet 2020 (Science)'},
+    {year:2022, twh:290, low:240, high:340, kind:'m', src:'IEA (범위 240–340)'},
+    {year:2024, twh:415, kind:'m', src:'IEA Energy & AI 2025'},
+    {year:2027, twh:631, kind:'pred', src:'본 측정 예측 415×1.15³'},
+    {year:2030, twh:945, kind:'p', src:'IEA Base Case 예측'}
+  ];
+  var svg = document.getElementById('chart');
+  var NS = 'http://www.w3.org/2000/svg';
+  var W=820, H=480, ML=62, MR=26, MT=26, MB=50;
+  var IW = W-ML-MR, IH = H-MT-MB;
+  var yr0=2009, yr1=2031;
+  var mode = 'lin';
+
+  function xpx(y){ return ML + (y-yr0)/(yr1-yr0)*IW; }
+  function ypxLin(v){ return MT + (1 - v/1000)*IH; }
+  function ypxLog(v){ var a=Math.log10(50), b=Math.log10(1200); return MT + (1-(Math.log10(v)-a)/(b-a))*IH; }
+  function ypx(v){ return mode==='lin'? ypxLin(v): ypxLog(v); }
+
+  function el(name, attrs){ var e=document.createElementNS(NS,name); for(var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+  function draw(){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    var cAccent=css('--accent'), cProj=css('--projected'), cDanger=css('--danger'),
+        cGrid=css('--grid'), cMuted=css('--muted'), cFaint=css('--faint'), cPanel=css('--panel');
+
+    var yticks = mode==='lin'? [0,200,400,600,800,1000] : [50,100,200,500,1000];
+    yticks.forEach(function(t){
+      var y=ypx(t);
+      svg.appendChild(el('line',{x1:ML,y1:y,x2:W-MR,y2:y,stroke:cGrid,'stroke-width':1}));
+      var lb=el('text',{x:ML-9,y:y+4,'text-anchor':'end',fill:cFaint,'font-size':11,'font-family':'ui-monospace,monospace'});
+      lb.textContent=t; svg.appendChild(lb);
+    });
+    [2010,2015,2020,2025,2030].forEach(function(t){
+      var x=xpx(t);
+      var lb=el('text',{x:x,y:H-MB+22,'text-anchor':'middle',fill:cFaint,'font-size':11,'font-family':'ui-monospace,monospace'});
+      lb.textContent=t; svg.appendChild(lb);
+    });
+
+    // 국면 구분선 (2018)
+    var xdiv=xpx(2018);
+    svg.appendChild(el('line',{x1:xdiv,y1:MT,x2:xdiv,y2:H-MB,stroke:cGrid,'stroke-width':1,'stroke-dasharray':'2 5'}));
+    var dlab=el('text',{x:xdiv+6,y:MT+14,fill:cFaint,'font-size':10.5,'font-family':'ui-monospace,monospace'});
+    dlab.textContent='국면 전환 ~2018'; svg.appendChild(dlab);
+
+    // 2022 불확실 범위 막대
+    var d22=DATA[2];
+    svg.appendChild(el('line',{x1:xpx(2022),y1:ypx(d22.low),x2:xpx(2022),y2:ypx(d22.high),stroke:cAccent,'stroke-width':7,'stroke-linecap':'round',opacity:.28}));
+
+    // 반증선: 2026수준(415) 수평 점선 + 라벨 (2025~2028)
+    var yFals=ypx(415);
+    svg.appendChild(el('line',{x1:xpx(2025),y1:yFals,x2:xpx(2028.6),y2:yFals,stroke:cDanger,'stroke-width':1.6,'stroke-dasharray':'2 4'}));
+    var fl=el('text',{x:xpx(2025),y:yFals-8,fill:cDanger,'font-size':10.5,'font-family':'ui-monospace,monospace'});
+    fl.textContent='반증선 · 2027 이 여기 이하면 기각'; svg.appendChild(fl);
+
+    // 측정 선 (2010-2024)
+    var meas=DATA.slice(0,4);
+    var mp=meas.map(function(d){return xpx(d.year)+','+ypx(d.twh);}).join(' ');
+    svg.appendChild(el('polyline',{points:mp,fill:'none',stroke:cAccent,'stroke-width':2.4,'stroke-linjoin':'round','stroke-linecap':'round'}));
+
+    // 예측 선 (2024 -> 2030), 2027 경유
+    var proj=[DATA[3],DATA[4],DATA[5]];
+    var pp=proj.map(function(d){return xpx(d.year)+','+ypx(d.twh);}).join(' ');
+    svg.appendChild(el('polyline',{points:pp,fill:'none',stroke:cProj,'stroke-width':2.2,'stroke-dasharray':'6 5','stroke-linecap':'round'}));
+
+    // 마커 + 직접 라벨
+    DATA.forEach(function(d){
+      var x=xpx(d.year), y=ypx(d.twh);
+      var color = d.kind==='m'? cAccent : (d.kind==='pred'? cDanger : cProj);
+      if(d.kind==='pred'){
+        svg.appendChild(el('circle',{cx:x,cy:y,r:5.5,fill:cPanel,stroke:cDanger,'stroke-width':2}));
+      } else {
+        svg.appendChild(el('circle',{cx:x,cy:y,r:5,fill:color,stroke:cPanel,'stroke-width':2}));
+      }
+      var showVal = (d.year!==2022);
+      if(showVal){
+        var above = (d.kind==='m' || d.year===2030) && d.year!==2010 ? true : (d.year===2010);
+        var ty = d.year===2030 ? y-12 : (d.year===2024 ? y+20 : y-12);
+        var tx = d.year===2010 ? x+2 : x;
+        var anchor = d.year===2010 ? 'start' : (d.year===2030 ? 'end':'middle');
+        var vt=el('text',{x:tx,y:ty,'text-anchor':anchor,fill:color,'font-size':12,'font-weight':600,'font-family':'ui-monospace,monospace'});
+        vt.textContent = (d.kind!=='m'? '~':'')+d.twh; svg.appendChild(vt);
+      }
+      // hover 타겟
+      var hit=el('circle',{cx:x,cy:y,r:16,fill:'transparent',style:'cursor:pointer'});
+      hit.addEventListener('mouseenter',function(e){ showTip(e,d); });
+      hit.addEventListener('mousemove',function(e){ moveTip(e); });
+      hit.addEventListener('mouseleave',hideTip);
+      svg.appendChild(hit);
+    });
+  }
+
+  var tt=document.getElementById('tt');
+  function showTip(e,d){
+    var kindTxt = d.kind==='m'?'측정':(d.kind==='pred'?'예측(본 측정)':'예측(IEA)');
+    var val = d.year===2022? '240–340 (중앙 290)' : (d.kind!=='m'?'~':'')+d.twh;
+    tt.innerHTML='<b>'+d.year+'</b> · '+kindTxt+'<br>'+val+' TWh<br>'+d.src;
+    tt.style.opacity=1; moveTip(e);
+  }
+  function moveTip(e){
+    var pad=14, w=tt.offsetWidth, h=tt.offsetHeight;
+    var x=e.clientX+pad, y=e.clientY+pad;
+    if(x+w>innerWidth) x=e.clientX-w-pad;
+    if(y+h>innerHeight) y=e.clientY-h-pad;
+    tt.style.left=x+'px'; tt.style.top=y+'px';
+  }
+  function hideTip(){ tt.style.opacity=0; }
+
+  function setMode(m){
+    mode=m;
+    document.getElementById('btnLin').setAttribute('aria-pressed', m==='lin');
+    document.getElementById('btnLog').setAttribute('aria-pressed', m==='log');
+    draw();
+  }
+  document.getElementById('btnLin').addEventListener('click',function(){setMode('lin');});
+  document.getElementById('btnLog').addEventListener('click',function(){setMode('log');});
+
+  var mq = matchMedia('(prefers-color-scheme: dark)');
+  if(mq.addEventListener) mq.addEventListener('change', draw);
+  var mo = new MutationObserver(draw);
+  mo.observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+
+  draw();
+})();
+</script>
